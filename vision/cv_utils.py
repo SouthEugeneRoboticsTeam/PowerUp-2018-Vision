@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import cv2
+import numpy as np
 from . import args
 
 verbose = args["verbose"]
@@ -33,7 +34,7 @@ def process_image(im, x1, y1, w1, h1, x2, y2, w2, h2):
     return offset_x, offset_y
 
 
-def draw_images(im, x, y, w, h, side):
+def draw_images(im, x, y, w, h):
     # Parameters are image and blob dimensions
 
     # Get image height and width
@@ -64,12 +65,6 @@ def draw_images(im, x, y, w, h, side):
 
     # Draw point on center of goal
     cv2.circle(im_rect, (center_x, center_y), 2, (255, 0, 0), thickness=3)
-
-    # Put text on screen
-    if side is True:
-        draw_offset(im_rect, offset_x, offset_y, (0, 30), 1, (255, 255, 255))
-    else:
-        draw_offset(im_rect, offset_x, offset_y, (400, 30), 1, (255, 255, 255))
 
     return im_rect
 

@@ -2,7 +2,7 @@
 
 import logging
 from networktables import NetworkTables
-from . import args
+from . import args, NetworkTablesException
 
 ip = args["roborio_ip"]
 verbose = args["verbose"]
@@ -21,42 +21,32 @@ if ip is not None:
 
 
 def put_number(key, value):
-    try:
-        if vision_table:
-            vision_table.putNumber(key, value)
-        elif verbose:
-            print("[NetworkTable] not connected")
-    except:
-        print("NetworkTable error putting number")
+    if vision_table:
+        vision_table.putNumber(key, value)
+    elif verbose:
+        print("[NetworkTables] not connected")
+    raise NetworkTablesException("Not connected to NetworkTables")
 
 
 def put_boolean(key, value):
-    try:
-        if vision_table:
-            vision_table.putBoolean(key, value)
-        elif verbose:
-            print("[NetworkTable] not connected")
-    except:
-        print("NetworkTable error putting boolean")
+    if vision_table:
+        vision_table.putBoolean(key, value)
+    elif verbose:
+        print("[NetworkTables] not connected")
+    raise NetworkTablesException("Not connected to NetworkTables")
 
 
-def get_boolean(key):
-    try:
-        if vision_table:
-            return vision_table.getBoolean(key)
-        elif verbose:
-            print("[NetworkTable] not connected")
-    except:
-        return False
-        print("NetworkTable error getting boolean")
+def get_boolean(key, default):
+    if vision_table:
+        return vision_table.getBoolean(key, default)
+    elif verbose:
+        print("[NetworkTables] not connected")
+    return default
 
 
-def get_number(key):
-    try:
-        if vision_table:
-            return vision_table.getNumber(key)
-        elif verbose:
-            print("[NetworkTable] not connected")
-    except:
-        return 0
-        print("NetworkTable error getting number")
+def get_number(key, default):
+    if vision_table:
+        return vision_table.getNumber(key, default)
+    elif verbose:
+        print("[NetworkTables] not connected")
+    return default

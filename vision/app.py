@@ -15,8 +15,11 @@ class Vision:
     def __init__(self):
         self.args = args
 
-        self.lower = np.array(self.args["lower_color"], dtype="uint8")
-        self.upper = np.array(self.args["upper_color"], dtype="uint8")
+        self.cube_lower = np.array(self.args["cube_lower_color"])
+        self.cube_upper = np.array(self.args["cube_upper_color"])
+
+        self.tape_lower = np.array(self.args["tape_lower_color"])
+        self.tape_upper = np.array(self.args["tape_upper_color"])
 
         self.min_area = int(self.args["min_area"])
         self.max_area = int(self.args["max_area"])
@@ -38,42 +41,95 @@ class Vision:
         else:
             self.run_video()
 
+    def do_image(self, im, blobs):
+        if blobs is not None:
+            x1, y1, w1, h1 = cv2.boundingRect(blobs[0])
+            x2, y2, w2, h2 = cv2.boundingRect(blobs[1])
+
+            area = w1 * h1 + w2 * h2
+            if (area > self.min_area) and (area < self.max_area):
+                if verbose:
+                    print("Cube] x: %d, y: %d, w: %d, h: %d, total "
+                          "area: %d" % (x1, y1, w1, h1, area))
+
+                offset_x, offset_y = cv_utils.process_image(
+                    im, x1, y1, w1, h1, x2, y2, w2, h2
+                )
+
+                print(offset_x, offset_y)
+
+                if self.display:
+                    # Draw image details
+                    im = cv_utils.draw_images(im, x1, y1, w1, h1)
+                    im = cv_utils.draw_images(im, x2, y2, w2, h2)
+
+                    return im
+
+                try:
+                    nt_utils.put_boolean("cube_found", True)
+                    nt_utils.put_number("cube_offset_x", offset_x)
+                    nt_utils.put_number("cube_offset_y", offset_y)
+                except:
+                    pass
+            else:
+                try:
+                    nt_utils.put_boolean("tape_found", False)
+                except:
+                    pass
+        else:
+            try:
+                nt_utils.put_boolean("tape_found", False)
+            except:
+                pass
+
+        return im
+
     def run_image(self):
         if self.verbose:
             print("Image path specified, reading from %s" % self.image)
 
-        im = cv2.imread(self.image)
+        bgr = cv2.imread(self.image)
+        im = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
 
-        blob, im_mask = cv_utils.get_blob(im, self.lower, self.upper)
-        if blob is not None:
-            x1, y1, w1, h1 = cv2.boundingRect(blob[0])
-            x2, y2, w2, h2 = cv2.boundingRect(blob[1])
+        blobs, im_mask = cv_utils.get_blob(im, self.cube_lower, self.cube_upper)
+        if blobs is not None:
+            x1, y1, w1, h1 = cv2.boundingRect(blobs[0])
+            x2, y2, w2, h2 = cv2.boundingRect(blobs[1])
 
             if w1 * h1 > self.min_area and w2 * h2 > self.min_area:
                 if verbose:
-                    print("[Blob 1] x: %d, y: %d, width: %d, height: %d, area: %d" % (x1, y1, w1, h1, w1 * h1))
-                    print("[Blob 2] x: %d, y: %d, width: %d, height: %d, area: %d" % (x2, y2, w2, h2, w2 * h2))
+                    print("[Blob 1] x: %d, y: %d, w: %d, h: %d, "
+                          "area: %d" % (x1, y1, w1, h1, w1 * h1))
+                    print("[Blob 2] x: %d, y: %d, w: %d, h: %d, "
+                          "area: %d" % (x2, y2, w2, h2, w2 * h2))
 
-                im_rect = cv_utils.draw_images(im, x1, y1, w1, h1, False)
+                im_rect = cv_utils.draw_images(
+                    im, x1, y1, w1 + (x2 - x1), h2, False
+                )
 
-                offset_x, offset_y = cv_utils.process_image(im, x1 * x2 / 2, y1 * y2 / 2, w1 * w2 / 2, h1 * h2 / 2)
+                offset_x, offset_y = cv_utils.process_image(
+                    im, x1, y1, w1, h1, x2, y2, w2, h2
+                )
 
                 print(offset_x)
                 print(offset_y)
 
-                nt_utils.put_number("offset_x", offset_x)
-                nt_utils.put_number("offset_y", offset_y)
+                try:
+                    nt_utils.put_number("offset_x", offset_x)
+                    nt_utils.put_number("offset_y", offset_y)
+                except:
+                    pass
         else:
             if verbose:
                 print("No largest blob was found")
 
         if self.display:
             # Show the images
-            if blob is not None:
-                cv2.imshow("Original", im_rect)
+            if blobs is not None:
+                cv2.imshow("Original", cv2.cvtColor(im_rect, cv2.COLOR_HSV2BGR))
                 cv2.imshow("Mask", im_mask)
             else:
-                cv2.imshow("Original", im)
+                cv2.imshow("Original", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
 
             cv2.waitKey(0)
 
@@ -88,62 +144,60 @@ class Vision:
         timeout = 0
 
         while True:
-            if nt_utils.get_boolean("shutdown"):
+            if nt_utils.get_boolean("shutdown", False):
                 os.system("shutdown -H now")
-                return
+                break
 
-            im = camera.read()
+            bgr = camera.read()
+            im = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+
             try:
-                lowerThreshold = np.array([nt_utils.get_number("front_lower_blue"), nt_utils.get_number("front_lower_green"), nt_utils.get_number("front_lower_red")])
-                upperThreshold = np.array([nt_utils.get_number("front_upper_blue"), nt_utils.get_number("front_upper_green"), nt_utils.get_number("front_upper_red")])
+                cube_lower = np.array([nt_utils.get_number("cube_lower_hue"),
+                                       nt_utils.get_number("cube_lower_sat"),
+                                       nt_utils.get_number("cube_lower_val")])
+                cube_upper = np.array([nt_utils.get_number("cube_upper_hue"),
+                                       nt_utils.get_number("cube_upper_sat"),
+                                       nt_utils.get_number("cube_upper_val")])
             except:
-                lowerThreshold = self.lower
-                upperThreshold = self.upper
-            print(upperThreshold, lowerThreshold)
+                cube_lower = self.cube_lower
+                cube_upper = self.cube_upper
+
+            try:
+                tape_lower = np.array([nt_utils.get_number("tape_lower_hue"),
+                                       nt_utils.get_number("tape_lower_sat"),
+                                       nt_utils.get_number("tape_lower_val")])
+                tape_upper = np.array([nt_utils.get_number("tape_upper_hue"),
+                                       nt_utils.get_number("tape_upper_sat"),
+                                       nt_utils.get_number("tape_upper_val")])
+            except:
+                tape_lower = self.tape_lower
+                tape_upper = self.tape_upper
 
             if im is not None:
-                im = cv2.resize(im, (600, 480), 0, 0)
-                try:
-                    blob, im_mask = cv_utils.get_blob(im, lowerThreshold, upperThreshold)
-                except TypeError:
-                    blob, im_mask = cv_utils.get_blob(im, self.lower, self.upper)
-                if blob is not None:
-                    x1, y1, w1, h1 = cv2.boundingRect(blob[0])
-                    x2, y2, w2, h2 = cv2.boundingRect(blob[1])
+                im = cv2.resize(im, (680, 480), 0, 0)
 
-                    area1 = w1 * h1
-                    area2 = w2 * h2
-                    totalArea = area1 + area2
-                    if (totalArea > self.min_area) and (totalArea < self.max_area):
-                        if verbose:
-                            print("[Blob] x: %d, y: %d, width: %d, height: %d, total area: %d" % (x1, y1, w1, h1, totalArea))
+                cube_blobs, cube_mask = cv_utils.get_blob(im, cube_lower, cube_upper)
+                tape_blobs, tape_mask = cv_utils.get_blob(im, tape_lower, tape_upper)
 
-                        offset_x, offset_y = cv_utils.process_image(im, x1, y1, w1, h1, x2, y2, w2, h2)
+                im = self.do_image(im, cube_blobs)
+                im = self.do_image(im, tape_blobs)
 
-                        nt_utils.put_number("offset_x", offset_x)
-                        nt_utils.put_number("offset_y", offset_y)
-                        nt_utils.put_boolean("blob_found", True)
-                        nt_utils.put_number("blob1_size", w1 * h1)
-                        nt_utils.put_number("blob2_size", w2 * h2)
-                    else:
-                        nt_utils.put_boolean("blob_found", False)
-
+                if cube_blobs is not None or tape_blobs is not None:
                     if self.display:
-                        # Draw image details
-                        im = cv_utils.draw_images(im, x1, y1, w1, h1, True)
-                        im = cv_utils.draw_images(im, x2, y2, w2, h2, False)
-
                         # Show the images
-                        cv2.imshow("Original", im)
-                        cv2.imshow("Mask", im_mask)
-                else:
-                    nt_utils.put_boolean("blob_found", False)
+                        cv2.imshow("Orig", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
 
+                        if cube_blobs is not None:
+                            cv2.imshow("Cube", cube_mask)
+
+                        if tape_mask is not None:
+                            cv2.imshow("Tape", tape_mask)
+                else:
                     if verbose:
-                        print("No largest blob was found")
+                        print("No largest blob found")
 
                     if self.display:
-                        cv2.imshow("Original", im)
+                        cv2.imshow("Orig", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
 
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
