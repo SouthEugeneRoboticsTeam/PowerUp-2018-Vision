@@ -49,14 +49,12 @@ class Vision:
             area = w1 * h1 + w2 * h2
             if (area > self.min_area) and (area < self.max_area):
                 if verbose:
-                    print("Cube] x: %d, y: %d, w: %d, h: %d, total "
+                    print("[Cube] x: %d, y: %d, w: %d, h: %d, total "
                           "area: %d" % (x1, y1, w1, h1, area))
 
                 offset_x, offset_y = cv_utils.process_image(
                     im, x1, y1, w1, h1, x2, y2, w2, h2
                 )
-
-                print(offset_x, offset_y)
 
                 if self.display:
                     # Draw image details
@@ -91,49 +89,24 @@ class Vision:
         bgr = cv2.imread(self.image)
         im = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
 
-        blobs, im_mask = cv_utils.get_blob(im, self.cube_lower, self.cube_upper)
-        if blobs is not None:
-            x1, y1, w1, h1 = cv2.boundingRect(blobs[0])
-            x2, y2, w2, h2 = cv2.boundingRect(blobs[1])
+        cube_blobs, cube_mask = cv_utils.get_blob(im, self.cube_lower, self.cube_upper)
+        tape_blobs, tape_mask = cv_utils.get_blob(im, self.tape_lower, self.tape_upper)
 
-            if w1 * h1 > self.min_area and w2 * h2 > self.min_area:
-                if verbose:
-                    print("[Blob 1] x: %d, y: %d, w: %d, h: %d, "
-                          "area: %d" % (x1, y1, w1, h1, w1 * h1))
-                    print("[Blob 2] x: %d, y: %d, w: %d, h: %d, "
-                          "area: %d" % (x2, y2, w2, h2, w2 * h2))
-
-                im_rect = cv_utils.draw_images(
-                    im, x1, y1, w1 + (x2 - x1), h2, False
-                )
-
-                offset_x, offset_y = cv_utils.process_image(
-                    im, x1, y1, w1, h1, x2, y2, w2, h2
-                )
-
-                print(offset_x)
-                print(offset_y)
-
-                try:
-                    nt_utils.put_number("offset_x", offset_x)
-                    nt_utils.put_number("offset_y", offset_y)
-                except:
-                    pass
-        else:
-            if verbose:
-                print("No largest blob was found")
+        im = self.do_image(im, cube_blobs)
+        im = self.do_image(im, tape_blobs)
 
         if self.display:
             # Show the images
-            if blobs is not None:
-                cv2.imshow("Original", cv2.cvtColor(im_rect, cv2.COLOR_HSV2BGR))
-                cv2.imshow("Mask", im_mask)
-            else:
-                cv2.imshow("Original", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
+            cv2.imshow("Orig", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
 
-            cv2.waitKey(0)
+            if cube_blobs is not None:
+                cv2.imshow("Cube", cube_mask)
 
-            cv2.destroyAllWindows()
+            if tape_mask is not None:
+                cv2.imshow("Tape", tape_mask)
+
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
     def run_video(self):
         camera = WebcamVideoStream(src=self.source).start()
