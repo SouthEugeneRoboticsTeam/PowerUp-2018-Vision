@@ -22,7 +22,7 @@ if ip is not None:
 
 def put_number(key, value):
     if vision_table:
-        vision_table.putNumber(key, value)
+        return vision_table.putNumber(key, value)
     elif verbose:
         print("[NetworkTables] not connected")
     raise NetworkTablesException("Not connected to NetworkTables")
@@ -30,7 +30,7 @@ def put_number(key, value):
 
 def put_boolean(key, value):
     if vision_table:
-        vision_table.putBoolean(key, value)
+        return vision_table.putBoolean(key, value)
     elif verbose:
         print("[NetworkTables] not connected")
     raise NetworkTablesException("Not connected to NetworkTables")

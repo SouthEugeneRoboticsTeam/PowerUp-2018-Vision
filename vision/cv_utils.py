@@ -7,19 +7,13 @@ from . import args
 verbose = args["verbose"]
 
 
-def process_image(im, x1, y1, w1, h1, x2, y2, w2, h2):
+def process_image(im, x1, y1, w1, h1):
     # Get image height and width
     height, width = im.shape[:2]
 
-    if verbose:
-        print("[Image] width: %d, height: %d" % (width, height))
-
-    offset_x = 0
-    offset_y = 0
-
     # Find center of goal
-    center_x = (int(0.5 * (x1 + (x1 + w1))) + int(0.5 * (x2 + (x2 + w2)))) / 2
-    center_y = (int(0.5 * (y1 + (y1 + h1))) + int(0.5 * (y2 + (y2 + h2)))) / 2
+    center_x = int(x1 + (x1 + w1)) / 2
+    center_y = int(y1 + (y1 + h1)) / 2
 
     if verbose:
         print("[Goal] center: (%d, %d)" % (center_x, center_y))
@@ -39,9 +33,6 @@ def draw_images(im, x, y, w, h):
 
     # Get image height and width
     height, width = im.shape[:2]
-
-    if verbose:
-        print("[Image] width: %d, height: %d" % (width, height))
 
     # Create before image
     im_rect = im.copy()

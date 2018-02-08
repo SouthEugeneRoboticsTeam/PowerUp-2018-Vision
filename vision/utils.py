@@ -21,8 +21,6 @@ def get_args():
     parser.add_argument("-mx", "--max-area", type=int, help="maximum area for blobs")
     parser.add_argument("-cl", "--cube-lower-color", action="append", nargs="+", type=int, help="lower color threshold in HSV for power cube")
     parser.add_argument("-cu", "--cube-upper-color", action="append", nargs="+", type=int, help="upper color threshold in HSV for power cube")
-    parser.add_argument("-tl", "--tape-lower-color", action="append", nargs="+", type=int, help="lower color threshold in HSV for tape")
-    parser.add_argument("-tu", "--tape-upper-color", action="append", nargs="+", type=int, help="upper color threshold in HSV for tape")
     parser.add_argument("-v", "--verbose", action="store_true", help="for debugging, prints useful values")
 
     return vars(parser.parse_args())

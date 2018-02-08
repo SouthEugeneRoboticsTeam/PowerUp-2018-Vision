@@ -8,8 +8,6 @@ from imutils.video import WebcamVideoStream
 from . import args
 import os
 
-verbose = args["verbose"]
-
 
 class Vision:
     def __init__(self):
@@ -17,9 +15,6 @@ class Vision:
 
         self.cube_lower = np.array(self.args["cube_lower_color"])
         self.cube_upper = np.array(self.args["cube_upper_color"])
-
-        self.tape_lower = np.array(self.args["tape_lower_color"])
-        self.tape_upper = np.array(self.args["tape_upper_color"])
 
         self.min_area = int(self.args["min_area"])
         self.max_area = int(self.args["max_area"])
@@ -44,22 +39,18 @@ class Vision:
     def do_image(self, im, blobs):
         if blobs is not None:
             x1, y1, w1, h1 = cv2.boundingRect(blobs[0])
-            x2, y2, w2, h2 = cv2.boundingRect(blobs[1])
 
-            area = w1 * h1 + w2 * h2
+            area = w1 * h1
             if (area > self.min_area) and (area < self.max_area):
-                if verbose:
+                if self.verbose:
                     print("[Cube] x: %d, y: %d, w: %d, h: %d, total "
                           "area: %d" % (x1, y1, w1, h1, area))
 
-                offset_x, offset_y = cv_utils.process_image(
-                    im, x1, y1, w1, h1, x2, y2, w2, h2
-                )
+                offset_x, offset_y = cv_utils.process_image(im, x1, y1, w1, h1)
 
                 if self.display:
                     # Draw image details
                     im = cv_utils.draw_images(im, x1, y1, w1, h1)
-                    im = cv_utils.draw_images(im, x2, y2, w2, h2)
 
                     return im
 
@@ -71,12 +62,12 @@ class Vision:
                     pass
             else:
                 try:
-                    nt_utils.put_boolean("tape_found", False)
+                    nt_utils.put_boolean("cube_found", False)
                 except:
                     pass
         else:
             try:
-                nt_utils.put_boolean("tape_found", False)
+                nt_utils.put_boolean("cube_found", False)
             except:
                 pass
 
@@ -90,10 +81,8 @@ class Vision:
         im = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
 
         cube_blobs, cube_mask = cv_utils.get_blob(im, self.cube_lower, self.cube_upper)
-        tape_blobs, tape_mask = cv_utils.get_blob(im, self.tape_lower, self.tape_upper)
 
         im = self.do_image(im, cube_blobs)
-        im = self.do_image(im, tape_blobs)
 
         if self.display:
             # Show the images
@@ -101,9 +90,6 @@ class Vision:
 
             if cube_blobs is not None:
                 cv2.imshow("Cube", cube_mask)
-
-            if tape_mask is not None:
-                cv2.imshow("Tape", tape_mask)
 
         cv2.waitKey(0)
         cv2.destroyAllWindows()
@@ -135,38 +121,22 @@ class Vision:
                 cube_lower = self.cube_lower
                 cube_upper = self.cube_upper
 
-            try:
-                tape_lower = np.array([nt_utils.get_number("tape_lower_hue"),
-                                       nt_utils.get_number("tape_lower_sat"),
-                                       nt_utils.get_number("tape_lower_val")])
-                tape_upper = np.array([nt_utils.get_number("tape_upper_hue"),
-                                       nt_utils.get_number("tape_upper_sat"),
-                                       nt_utils.get_number("tape_upper_val")])
-            except:
-                tape_lower = self.tape_lower
-                tape_upper = self.tape_upper
-
             if im is not None:
                 im = cv2.resize(im, (680, 480), 0, 0)
 
                 cube_blobs, cube_mask = cv_utils.get_blob(im, cube_lower, cube_upper)
-                tape_blobs, tape_mask = cv_utils.get_blob(im, tape_lower, tape_upper)
 
                 im = self.do_image(im, cube_blobs)
-                im = self.do_image(im, tape_blobs)
 
-                if cube_blobs is not None or tape_blobs is not None:
+                if cube_blobs is not None:
                     if self.display:
                         # Show the images
                         cv2.imshow("Orig", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
 
                         if cube_blobs is not None:
                             cv2.imshow("Cube", cube_mask)
-
-                        if tape_mask is not None:
-                            cv2.imshow("Tape", tape_mask)
                 else:
-                    if verbose:
+                    if self.verbose:
                         print("No largest blob found")
 
                     if self.display:
