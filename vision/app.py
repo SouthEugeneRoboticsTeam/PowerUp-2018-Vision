@@ -95,10 +95,10 @@ class Vision:
         cv2.destroyAllWindows()
 
     def run_video(self):
-        camera = WebcamVideoStream(src=self.source).start()
-
         if self.verbose:
             print("No image path specified, reading from camera video feed")
+
+        camera = WebcamVideoStream(src=self.source).start()
 
         timeout = 0
 
@@ -122,6 +122,8 @@ class Vision:
                 cube_upper = self.cube_upper
 
             if im is not None:
+                timeout = 0
+
                 im = cv2.resize(im, (680, 480), 0, 0)
 
                 cube_blobs, cube_mask = cv_utils.get_blob(im, cube_lower, cube_upper)
