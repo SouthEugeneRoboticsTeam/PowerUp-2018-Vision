@@ -150,7 +150,7 @@ class Vision:
 
                 timeout += 1
 
-                if (timeout > 500):
+                if (timeout > 5000):
                     print("Camera search timed out")
                     break
 
