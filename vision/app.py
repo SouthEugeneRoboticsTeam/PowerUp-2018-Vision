@@ -124,7 +124,7 @@ class Vision:
             if im is not None:
                 timeout = 0
 
-                im = cv2.resize(im, (680, 480), 0, 0)
+                im = cv2.resize(im, (640, 480), 0, 0)
 
                 cube_blobs, cube_mask = cv_utils.get_blob(im, cube_lower, cube_upper)
 
