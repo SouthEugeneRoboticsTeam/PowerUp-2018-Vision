@@ -1,7 +1,7 @@
 # SERT Vision
 
 [![Team 2521][team-img]][team-url]
-[![Python 2.7][python-img]][python-url]
+[![Python 3.6][python-img]][python-url]
 [![License][license-img]][license-url]
 [![Travis][travis-img]][travis-url]
 
@@ -9,8 +9,8 @@ SERT's OpenCV vision code.
 
 ## Usage
 
-Before starting the program, you must install OpenCV v2.4.x along with the
-pip dependencies:
+Before starting the program, you must install OpenCV >= v3.1.x along with
+the pip dependencies:
 
 ```bash
 $ pip install -r requirements.txt
@@ -71,7 +71,7 @@ $ v4l-ctl -d /dev/video0 -c exposure_absolute=50
 
 [team-img]:     https://img.shields.io/badge/team-2521-7d26cd.svg?style=flat-square
 [team-url]:     https://sert2521.org
-[python-img]:   https://img.shields.io/badge/python-2.7-blue.svg?style=flat-square
+[python-img]:   https://img.shields.io/badge/python-3.6-blue.svg?style=flat-square
 [python-url]:   https://www.python.org/downloads
 [license-img]:  https://img.shields.io/github/license/SouthEugeneRoboticsTeam/vision.svg?style=flat-square
 [license-url]:  https://github.com/SouthEugeneRoboticsTeam/vision/blob/master/LICENSE
