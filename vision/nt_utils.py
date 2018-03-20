@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import logging
+import subprocess
 from networktables import NetworkTables
 from . import args, NetworkTablesException
 
@@ -8,6 +9,10 @@ ip = args["roborio_ip"]
 verbose = args["verbose"]
 
 vision_table = False
+v4l2_table = False
+
+def v4l2_changed(table, key, value, new):
+    subprocess.call("v4l2-ctl -c {}={}".format(key, value), shell=True)
 
 if verbose:
     logging.basicConfig(level=logging.DEBUG)
@@ -18,6 +23,9 @@ if ip is not None:
     NetworkTables.initialize(server=ip)
 
     vision_table = NetworkTables.getTable("Vision")
+    v4l2_table = NetworkTables.getTable("v4l2")
+
+    v4l2_table.addEntryListener(v4l2_changed)
 
 
 def put_number(key, value):
