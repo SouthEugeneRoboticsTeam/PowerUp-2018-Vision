@@ -108,7 +108,6 @@ class Vision:
                 break
 
             bgr = camera.read()
-            im = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
 
             try:
                 cube_lower = np.array([nt_utils.get_number("cube_lower_hue"),
@@ -121,10 +120,9 @@ class Vision:
                 cube_lower = self.cube_lower
                 cube_upper = self.cube_upper
 
-            if im is not None:
-                timeout = 0
-
-                im = cv2.resize(im, (640, 480), 0, 0)
+            if bgr is not None:
+                im = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+                im = cv2.resize(im, (680, 480), 0, 0)
 
                 cube_blobs, cube_mask = cv_utils.get_blob(im, cube_lower, cube_upper)
 
