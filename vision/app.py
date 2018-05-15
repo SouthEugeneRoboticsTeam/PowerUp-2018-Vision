@@ -26,7 +26,7 @@ class Vision:
 
         self.source = self.args["source"]
 
-        self.camera = WebcamVideoStream(src=self.source).start()
+        self.kill_received = False
 
         if self.verbose:
             print(self.args)
@@ -49,11 +49,9 @@ class Vision:
 
                 offset_x, offset_y = cv_utils.process_image(im, x1, y1, w1, h1)
 
-                network.send({
-                    "cube_found": True,
-                    "cube_offset_x": offset_x,
-                    "cube_offset_y": offset_y
-                })
+                network.send({"found": True,
+                              "offset_x": offset_x,
+                              "offset_y": offset_y})
 
                 if self.display:
                     # Draw image details
@@ -61,9 +59,9 @@ class Vision:
 
                     return im
             else:
-                network.send({"cube_found": False})
+                network.send({"found": False})
         else:
-            network.send({"cube_found": False})
+            network.send({"found": False})
 
         return im
 
@@ -88,30 +86,61 @@ class Vision:
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    def run_frame(self):
-        bgr = self.camera.read()
-        im = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+    def run_video(self):
+        if self.verbose:
+            print("No image path specified, reading from camera video feed")
 
-        cube_lower = self.cube_lower
-        cube_upper = self.cube_upper
+        camera = WebcamVideoStream(src=self.source).start()
 
-        if im is not None:
-            im = cv2.resize(im, (680, 480), 0, 0)
+        timeout = 0
 
-            cube_blobs, cube_mask = cv_utils.get_blob(im, cube_lower, cube_upper)
+        while not self.kill_received:
+            bgr = camera.read()
 
-            im = self.do_image(im, cube_blobs)
+            cube_lower = self.cube_lower
+            cube_upper = self.cube_upper
 
-            if cube_blobs is not None:
-                if self.display:
-                    # Show the images
-                    cv2.imshow("Orig", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
+            if bgr is not None:
+                im = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+                im = cv2.resize(im, (680, 480), 0, 0)
 
-                    if cube_blobs is not None:
-                        cv2.imshow("Cube", cube_mask)
+                cube_blobs, cube_mask = cv_utils.get_blob(im, cube_lower, cube_upper)
+
+                im = self.do_image(im, cube_blobs)
+
+                if cube_blobs is not None:
+                    if self.display:
+                        # Show the images
+                        cv2.imshow("Orig", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
+
+                        if cube_blobs is not None:
+                            cv2.imshow("Cube", cube_mask)
+                else:
+                    if self.verbose:
+                        print("No largest blob found")
+
+                    if self.display:
+                        cv2.imshow("Orig", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
+
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    self.kill_received = True
+                    break
             else:
-                if self.verbose:
-                    print("No largest blob found")
+                if timeout == 0:
+                    print("No camera detected... Retrying...")
 
-                if self.display:
-                    cv2.imshow("Orig", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
+                timeout += 1
+
+                if timeout > 5000:
+                    print("Camera search timed out!")
+                    break
+
+        camera.stop()
+        cv2.destroyAllWindows()
+
+    def stop(self):
+        self.kill_received = True
+
+    @property
+    def stopped(self):
+        return self.kill_received

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import time
+import sys
 import vision.network_utils as network
 from vision.app import Vision
 from threading import Thread
@@ -9,12 +10,17 @@ from threading import Thread
 class VisionWorker(Thread):
     def __init__(self):
         Thread.__init__(self)
-        self.kill_received = False
-        self.app = Vision()
+        self.vision = Vision()
 
     def run(self):
-        while not self.kill_received:
-            self.app.run_frame()
+        self.vision.run()
+
+    def stop(self):
+        self.vision.stop()
+
+    @property
+    def stopped(self):
+        return self.vision.stopped
 
 
 class HeartbeatWorker(Thread):
@@ -26,27 +32,44 @@ class HeartbeatWorker(Thread):
         while not self.kill_received:
             self.heartbeat()
 
+        network.send({"alive": False})
+
     def heartbeat(self):
         network.send({"alive": True})
         time.sleep(0.25)
 
+    def stop(self):
+        self.kill_received = True
+
+    @property
+    def stopped(self):
+        return self.kill_received
+
 
 def main():
-    threads = [VisionWorker(), HeartbeatWorker()]
+    heartbeat = HeartbeatWorker()
+    vision = VisionWorker()
 
-    for t in threads:
-        t.start()
+    heartbeat.start()
+    vision.start()
 
-    while len(threads) > 0:
+    while True:
         try:
-            print(threads)
-            print(len(threads))
-            threads = [t for t in threads if t is not None and t.isAlive()]
-            time.sleep(2)
+            # Stop threads if main vision thread dies in a method other than ctrl-c
+            # (e.g. hitting q in display mode)
+            if vision.stopped:
+                heartbeat.stop()
+                sys.exit(1)
+
+            time.sleep(0.25)
         except KeyboardInterrupt:
-            print("Ctrl-c received! Sending kill to threads...")
-            for t in threads:
-                t.kill_received = True
+            # Stop running threads
+            vision.stop()
+            heartbeat.stop()
+
+            # Allow threads to cleanup and die, then exit
+            time.sleep(0.25)
+            sys.exit(1)
 
 
 if __name__ == '__main__':
