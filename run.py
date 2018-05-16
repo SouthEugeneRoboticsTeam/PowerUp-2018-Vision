@@ -32,10 +32,10 @@ class HeartbeatWorker(Thread):
         while not self.kill_received:
             self.heartbeat()
 
-        network.send({"alive": False})
+        network.send_heartbeat_end()
 
     def heartbeat(self):
-        network.send({"alive": True})
+        network.send_heartbeat()
         time.sleep(0.25)
 
     def stop(self):

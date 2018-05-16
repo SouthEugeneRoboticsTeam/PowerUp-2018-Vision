@@ -16,3 +16,25 @@ def send(message, recipient=(ip, port)):
     print(message)
     message['time'] = int(time.time() * 1000)
     sock.sendto(json.dumps(message, separators=(',', ':')).encode(), recipient)
+
+
+def send_heartbeat():
+    send({"alive": True})
+
+
+def send_heartbeat_end():
+    send({"alive": False})
+
+
+def send_found(offset_x, offset_y):
+    send({
+        "found": True,
+        "offset_x": offset_x,
+        "offset_y": offset_y
+    })
+
+
+def send_not_found():
+    send({
+        "found": False
+    })

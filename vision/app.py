@@ -49,9 +49,7 @@ class Vision:
 
                 offset_x, offset_y = cv_utils.process_image(im, x1, y1, w1, h1)
 
-                network.send({"found": True,
-                              "offset_x": offset_x,
-                              "offset_y": offset_y})
+                network.send_found(offset_x, offset_y)
 
                 if self.display:
                     # Draw image details
@@ -59,9 +57,9 @@ class Vision:
 
                     return im
             else:
-                network.send({"found": False})
+                network.send_not_found()
         else:
-            network.send({"found": False})
+            network.send_not_found()
 
         return im
 
