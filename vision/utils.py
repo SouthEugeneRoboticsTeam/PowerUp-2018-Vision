@@ -20,8 +20,9 @@ def get_args():
     parser.add_argument("-p", "--roborio-port", help="the port of the roboRIO's UDP server")
     parser.add_argument("-ma", "--min-area", type=int, help="minimum area for blobs")
     parser.add_argument("-mx", "--max-area", type=int, help="maximum area for blobs")
-    parser.add_argument("-cl", "--cube-lower-color", action="append", nargs="+", type=int, help="lower color threshold in HSV for power cube")
-    parser.add_argument("-cu", "--cube-upper-color", action="append", nargs="+", type=int, help="upper color threshold in HSV for power cube")
+    parser.add_argument("-l", "--lower-color", action="append", nargs="+", type=int, help="lower color threshold in HSV")
+    parser.add_argument("-u", "--upper-color", action="append", nargs="+", type=int, help="upper color threshold in HSV")
+    parser.add_argument("-t", "--tuning", action="store_true", help="open in tuning mode")
     parser.add_argument("-v", "--verbose", action="store_true", help="for debugging, prints useful values")
 
     return vars(parser.parse_args())

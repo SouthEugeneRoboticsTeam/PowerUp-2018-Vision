@@ -12,8 +12,8 @@ class Vision:
     def __init__(self):
         self.args = args
 
-        self.cube_lower = np.array(self.args["cube_lower_color"])
-        self.cube_upper = np.array(self.args["cube_upper_color"])
+        self.lower = np.array(self.args["lower_color"])
+        self.upper = np.array(self.args["upper_color"])
 
         self.min_area = int(self.args["min_area"])
         self.max_area = int(self.args["max_area"])
@@ -25,6 +25,8 @@ class Vision:
         self.verbose = self.args["verbose"]
 
         self.source = self.args["source"]
+
+        self.tuning = self.args["tuning"]
 
         self.kill_received = False
 
@@ -72,7 +74,7 @@ class Vision:
         bgr = cv2.imread(self.image)
         im = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
 
-        cube_blobs, cube_mask = cv_utils.get_blob(im, self.cube_lower, self.cube_upper)
+        cube_blobs, cube_mask = cv_utils.get_blob(im, self.lower, self.upper)
 
         im = self.do_image(im, cube_blobs)
 
@@ -94,11 +96,29 @@ class Vision:
 
         timeout = 0
 
+        if self.tuning:
+            cv2.namedWindow("Settings")
+            cv2.resizeWindow("Settings", 700, 350)
+
+            cv2.createTrackbar("Lower H", "Settings", self.lower[0], 255,
+                               lambda val: self.update_setting(True, 0, val))
+            cv2.createTrackbar("Lower S", "Settings", self.lower[1], 255,
+                               lambda val: self.update_setting(True, 1, val))
+            cv2.createTrackbar("Lower V", "Settings", self.lower[2], 255,
+                               lambda val: self.update_setting(True, 2, val))
+
+            cv2.createTrackbar("Upper H", "Settings", self.upper[0], 255,
+                               lambda val: self.update_setting(False, 0, val))
+            cv2.createTrackbar("Upper S", "Settings", self.upper[1], 255,
+                               lambda val: self.update_setting(False, 1, val))
+            cv2.createTrackbar("Upper V", "Settings", self.upper[2], 255,
+                               lambda val: self.update_setting(False, 2, val))
+
         while not self.kill_received:
             bgr = camera.read()
 
-            cube_lower = self.cube_lower
-            cube_upper = self.cube_upper
+            cube_lower = self.lower
+            cube_upper = self.upper
 
             if bgr is not None:
                 im = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
@@ -131,6 +151,12 @@ class Vision:
 
         camera.stop()
         cv2.destroyAllWindows()
+
+    def update_setting(self, lower, index, value):
+        if lower:
+            self.lower[index] = value
+        else:
+            self.upper[index] = value
 
     def stop(self):
         self.kill_received = True
