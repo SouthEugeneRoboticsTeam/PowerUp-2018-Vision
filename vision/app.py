@@ -3,7 +3,7 @@
 import cv2
 import numpy as np
 import vision.cv_utils as cv_utils
-import vision.network_utils as network
+from vision.network_utils import Network
 from imutils.video import WebcamVideoStream
 from . import args
 
@@ -30,6 +30,8 @@ class Vision:
 
         self.kill_received = False
 
+        self.network = Network()
+
         if self.verbose:
             print(self.args)
 
@@ -51,9 +53,9 @@ class Vision:
 
                 offset_x, offset_y = cv_utils.process_image(im, x1, y1, w1, h1)
 
-                network.send({"found": True,
-                              "offset_x": offset_x,
-                              "offset_y": offset_y})
+                self.network.send({"found": True,
+                                   "offset_x": offset_x,
+                                   "offset_y": offset_y})
 
                 if self.display:
                     # Draw image details
@@ -61,9 +63,9 @@ class Vision:
 
                     return im
             else:
-                network.send_new({"found": False})
+                self.network.send_new({"found": False})
         else:
-            network.send_new({"found": False})
+            self.network.send_new({"found": False})
 
         return im
 

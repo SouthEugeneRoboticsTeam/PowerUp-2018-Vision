@@ -2,7 +2,7 @@
 
 import time
 import sys
-import vision.network_utils as network
+from vision.network_utils import Network
 from vision.app import Vision
 from threading import Thread
 
@@ -27,15 +27,16 @@ class HeartbeatWorker(Thread):
     def __init__(self):
         Thread.__init__(self)
         self.kill_received = False
+        self.network = Network()
 
     def run(self):
         while not self.kill_received:
             self.heartbeat()
 
-        network.send({"alive": False})
+        self.network.send({"alive": False})
 
     def heartbeat(self):
-        network.send({"alive": True})
+        self.network.send({"alive": True})
         time.sleep(0.25)
 
     def stop(self):
