@@ -3,10 +3,9 @@
 import cv2
 import numpy as np
 import vision.cv_utils as cv_utils
-import vision.nt_utils as nt_utils
+import vision.network_utils as network
 from imutils.video import WebcamVideoStream
 from . import args
-import os
 
 
 class Vision:
@@ -26,6 +25,8 @@ class Vision:
         self.verbose = self.args["verbose"]
 
         self.source = self.args["source"]
+
+        self.kill_received = False
 
         if self.verbose:
             print(self.args)
@@ -48,28 +49,19 @@ class Vision:
 
                 offset_x, offset_y = cv_utils.process_image(im, x1, y1, w1, h1)
 
+                network.send({"found": True,
+                              "offset_x": offset_x,
+                              "offset_y": offset_y})
+
                 if self.display:
                     # Draw image details
                     im = cv_utils.draw_images(im, x1, y1, w1, h1)
 
                     return im
-
-                try:
-                    nt_utils.put_boolean("cube_found", True)
-                    nt_utils.put_number("cube_offset_x", offset_x)
-                    nt_utils.put_number("cube_offset_y", offset_y)
-                except:
-                    pass
             else:
-                try:
-                    nt_utils.put_boolean("cube_found", False)
-                except:
-                    pass
+                network.send_new({"found": False})
         else:
-            try:
-                nt_utils.put_boolean("cube_found", False)
-            except:
-                pass
+            network.send_new({"found": False})
 
         return im
 
@@ -86,7 +78,7 @@ class Vision:
 
         if self.display:
             # Show the images
-            cv2.imshow("Orig", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
+            cv2.imshow("Original", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
 
             if cube_blobs is not None:
                 cv2.imshow("Cube", cube_mask)
@@ -102,23 +94,11 @@ class Vision:
 
         timeout = 0
 
-        while True:
-            if nt_utils.get_boolean("shutdown", False):
-                os.system("shutdown -H now")
-                break
-
+        while not self.kill_received:
             bgr = camera.read()
 
-            try:
-                cube_lower = np.array([nt_utils.get_number("cube_lower_hue"),
-                                       nt_utils.get_number("cube_lower_sat"),
-                                       nt_utils.get_number("cube_lower_val")])
-                cube_upper = np.array([nt_utils.get_number("cube_upper_hue"),
-                                       nt_utils.get_number("cube_upper_sat"),
-                                       nt_utils.get_number("cube_upper_val")])
-            except:
-                cube_lower = self.cube_lower
-                cube_upper = self.cube_upper
+            cube_lower = self.cube_lower
+            cube_upper = self.cube_upper
 
             if bgr is not None:
                 im = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
@@ -128,30 +108,33 @@ class Vision:
 
                 im = self.do_image(im, cube_blobs)
 
-                if cube_blobs is not None:
-                    if self.display:
-                        # Show the images
-                        cv2.imshow("Orig", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
-
-                        if cube_blobs is not None:
-                            cv2.imshow("Cube", cube_mask)
-                else:
-                    if self.verbose:
+                if cube_blobs is not None and self.display and cube_blobs is not None:
+                        cv2.imshow("Cube", cube_mask)
+                elif self.verbose:
                         print("No largest blob found")
 
-                    if self.display:
-                        cv2.imshow("Orig", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
+                if self.display:
+                    cv2.imshow("Original", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
 
                 if cv2.waitKey(1) & 0xFF == ord("q"):
+                    self.kill_received = True
                     break
             else:
-                if (timeout == 0):
-                    print("No camera detected")
+                if timeout == 0:
+                    print("No camera detected... Retrying...")
 
                 timeout += 1
 
-                if (timeout > 5000):
-                    print("Camera search timed out")
+                if timeout > 5000:
+                    print("Camera search timed out!")
                     break
 
+        camera.stop()
         cv2.destroyAllWindows()
+
+    def stop(self):
+        self.kill_received = True
+
+    @property
+    def stopped(self):
+        return self.kill_received
