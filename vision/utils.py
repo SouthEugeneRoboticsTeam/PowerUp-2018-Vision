@@ -17,6 +17,7 @@ def get_args():
     parser.add_argument("-s", "--source", type=int, default=0, help="video source (default=0)")
     parser.add_argument("-d", "--display", action="store_true", help="display results of processing in a new window")
     parser.add_argument("-ip", "--roborio-ip", help="the ip address of the roboRIO")
+    parser.add_argument("-p", "--roborio-port", help="the port of the roboRIO's UDP server")
     parser.add_argument("-ma", "--min-area", type=int, help="minimum area for blobs")
     parser.add_argument("-mx", "--max-area", type=int, help="maximum area for blobs")
     parser.add_argument("-cl", "--cube-lower-color", action="append", nargs="+", type=int, help="lower color threshold in HSV for power cube")
