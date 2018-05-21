@@ -87,8 +87,10 @@ class Vision:
             if cube_blobs is not None:
                 cv2.imshow("Cube", cube_mask)
 
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
+        self.kill_received = True
 
     def run_video(self):
         if self.verbose:
