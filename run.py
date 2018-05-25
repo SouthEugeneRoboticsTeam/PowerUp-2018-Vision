@@ -60,7 +60,7 @@ def main():
             # (e.g. hitting q in display mode)
             if vision.stopped:
                 heartbeat.stop()
-                sys.exit(1)
+                sys.exit(0)
 
             time.sleep(0.25)
         except KeyboardInterrupt:
@@ -70,7 +70,7 @@ def main():
 
             # Allow threads to cleanup and die, then exit
             time.sleep(0.25)
-            sys.exit(1)
+            sys.exit(0)
 
 
 if __name__ == '__main__':
