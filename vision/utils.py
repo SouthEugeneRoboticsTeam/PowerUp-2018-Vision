@@ -14,6 +14,7 @@ def get_args():
     parser = configargparse.ArgParser(default_config_files=default_config, auto_env_var_prefix='VISION_')
 
     parser.add_argument("-i", "--image", help="path to image")
+    parser.add_argument("-o", "--output", help="path to export image (if `--image` is set)")
     parser.add_argument("-s", "--source", type=int, default=0, help="video source (default=0)")
     parser.add_argument("-d", "--display", action="store_true", help="display results of processing in a new window")
     parser.add_argument("-ip", "--roborio-ip", help="the ip address of the roboRIO")

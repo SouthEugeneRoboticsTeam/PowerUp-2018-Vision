@@ -19,14 +19,12 @@ class Vision:
         self.max_area = int(self.args["max_area"])
 
         self.image = self.args["image"]
+        self.image_out = self.args["output"]
 
         self.display = self.args["display"]
-
-        self.verbose = self.args["verbose"]
-
         self.source = self.args["source"]
-
         self.tuning = self.args["tuning"]
+        self.verbose = self.args["verbose"]
 
         self.kill_received = False
 
@@ -76,19 +74,34 @@ class Vision:
         bgr = cv2.imread(self.image)
         im = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
 
-        cube_blobs, cube_mask = cv_utils.get_blob(im, self.lower, self.upper)
+        # Ensure that things get drawn as if it were to be displayed
+        old_display = self.display
+        self.display = True
 
-        im = self.do_image(im, cube_blobs)
+        blobs, mask = cv_utils.get_blob(im, self.lower, self.upper)
+
+        im = self.do_image(im, blobs)
+
+        self.display = old_display
 
         if self.display:
             # Show the images
             cv2.imshow("Original", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
 
-            if cube_blobs is not None:
-                cv2.imshow("Cube", cube_mask)
+            if blobs is not None:
+                cv2.imshow("Cube", mask)
 
             cv2.waitKey(0)
             cv2.destroyAllWindows()
+
+        if self.image_out is not None:
+            if mask is None:
+                mask = np.zeros(im.shape[0:2])
+
+            print(im.shape)
+            print(mask.shape)
+
+            cv2.imwrite(self.image_out, np.concatenate((cv2.cvtColor(np.uint8(im), cv2.COLOR_HSV2BGR), cv2.cvtColor(np.uint8(mask), cv2.COLOR_GRAY2BGR)), axis=0))
 
         self.kill_received = True
 
@@ -121,19 +134,16 @@ class Vision:
         while not self.kill_received:
             bgr = camera.read()
 
-            cube_lower = self.lower
-            cube_upper = self.upper
-
             if bgr is not None:
                 im = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
                 im = cv2.resize(im, (680, 480), 0, 0)
 
-                cube_blobs, cube_mask = cv_utils.get_blob(im, cube_lower, cube_upper)
+                blobs, mask = cv_utils.get_blob(im, self.lower, self.upper)
 
-                im = self.do_image(im, cube_blobs)
+                im = self.do_image(im, blobs)
 
-                if cube_blobs is not None and self.display and cube_blobs is not None:
-                        cv2.imshow("Cube", cube_mask)
+                if blobs is not None and self.display and blobs is not None:
+                        cv2.imshow("Cube", mask)
                 elif self.verbose:
                         print("No largest blob found")
 
