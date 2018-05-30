@@ -32,8 +32,13 @@ class Network:
         :param recipient: the recipient of the packet
         """
         message["time"] = int(time.time() * 1000)
-        self.sock.sendto(json.dumps(message, separators=(",", ":")).encode(),
-                         recipient if recipient else (self.ip, self.port))
+
+        try:
+            self.sock.sendto(json.dumps(message, separators=(",", ":")).encode(),
+                             recipient if recipient else (self.ip, self.port))
+        except:
+            print("Network error...")
+            pass
 
     def send_new(self, message, recipient=False):
         """
