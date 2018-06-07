@@ -25,9 +25,10 @@ $ python run.py
 Full usage:
 
 ```text
-usage: run.py [-h] [-i IMAGE] [-s SOURCES] [-d] [-ip ROBORIO_IP] [-ma MIN_AREA]
-              [-lt LOWER_COLOR [LOWER_COLOR ...]]
-              [-ut UPPER_COLOR [UPPER_COLOR ...]] [-v]
+usage: run.py [-h] [-i IMAGE] [-s SOURCE] [-d] [-ip ROBORIO_IP]
+              [-p ROBORIO_PORT] [-ma MIN_AREA] [-mx MAX_AREA]
+              [-l LOWER_COLOR [LOWER_COLOR ...]]
+              [-u UPPER_COLOR [UPPER_COLOR ...]] [-t] [-v]
 ```
 
 ## Configuration
@@ -39,21 +40,26 @@ All command-line arguments may be configured in the `config.ini` file
 argument may be edited using the `lower-rgb` line in the `config.ini`.
 
 ```text
--h, --help            show this help message and exit
--i IMAGE, --image IMAGE
-                      path to image
--s SOURCES, --source SOURCES
-                      video sources (default=[0,1])
--d, --display         display results of processing in a new window
--ip ROBORIO_IP, --roborio-ip ROBORIO_IP
-                      the ip address of the roboRIO
--ma MIN_AREA, --min-area MIN_AREA
-                      minimum area for blobs
--lt LOWER_COLOR [LOWER_COLOR ...], --lower-color LOWER_COLOR [LOWER_COLOR ...]
-                      lower color threshold for BGR values
--ut UPPER_COLOR [UPPER_COLOR ...], --upper-color UPPER_COLOR [UPPER_COLOR ...]
-                      upper color threshold for BGR values
--v, --verbose         for debugging, prints useful values
+  -h, --help            show this help message and exit
+  -i IMAGE, --image IMAGE
+                        path to image
+  -s SOURCE, --source SOURCE
+                        video source (default=0)
+  -d, --display         display results of processing in a new window
+  -ip ROBORIO_IP, --roborio-ip ROBORIO_IP
+                        the ip address of the roboRIO
+  -p ROBORIO_PORT, --roborio-port ROBORIO_PORT
+                        the port of the roboRIO's UDP server
+  -ma MIN_AREA, --min-area MIN_AREA
+                        minimum area for blobs
+  -mx MAX_AREA, --max-area MAX_AREA
+                        maximum area for blobs
+  -l LOWER_COLOR [LOWER_COLOR ...], --lower-color LOWER_COLOR [LOWER_COLOR ...]
+                        lower color threshold in HSV
+  -u UPPER_COLOR [UPPER_COLOR ...], --upper-color UPPER_COLOR [UPPER_COLOR ...]
+                        upper color threshold in HSV
+  -t, --tuning          open in tuning mode
+  -v, --verbose         for debugging, prints useful values
 ```
 
 ### Camera
