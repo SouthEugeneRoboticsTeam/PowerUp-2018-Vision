@@ -9,7 +9,7 @@ from threading import Thread
 
 class VisionWorker(Thread):
     def __init__(self):
-        Thread.__init__(self)
+        Thread.__init__(self, name="VisionWorker")
         self.vision = Vision()
 
     def run(self):
@@ -25,7 +25,7 @@ class VisionWorker(Thread):
 
 class HeartbeatWorker(Thread):
     def __init__(self):
-        Thread.__init__(self)
+        Thread.__init__(self, name="HeartbearWorker")
         self.kill_received = False
         self.network = Network()
 
