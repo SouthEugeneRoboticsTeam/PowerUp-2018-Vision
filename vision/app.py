@@ -128,7 +128,7 @@ class Vision:
 
             if bgr is not None:
                 im = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
-                im = cv2.resize(im, (680, 480), 0, 0)
+                im = cv2.resize(im, (640, 480), 0, 0)
 
                 cube_blobs, cube_mask = cv_utils.get_blob(im, cube_lower, cube_upper)
 
