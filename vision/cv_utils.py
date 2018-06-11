@@ -43,15 +43,9 @@ def draw_images(im, x, y, w, h):
     center_x = int(0.5 * (x + (x + w)))
     center_y = int(0.5 * (y + (y + h)))
 
-    if verbose:
-        print("[Blob] center: (%d, %d)" % (center_x, center_y))
-
     # Find pixels away from center
     offset_x = int(width / 2 - center_x) * -1
     offset_y = int(height / 2 - center_y)
-
-    if verbose:
-        print("[Blob] offset: (%d, %d)" % (offset_x, offset_y))
 
     # Draw point on center of goal
     cv2.circle(im_rect, (center_x, center_y), 2, (255, 0, 0), thickness=3)

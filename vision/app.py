@@ -50,7 +50,7 @@ class Vision:
             area = w1 * h1
             if (area > self.min_area) and (area < self.max_area):
                 if self.verbose:
-                    print("[Cube] x: %d, y: %d, w: %d, h: %d, total "
+                    print("[Goal] x: %d, y: %d, w: %d, h: %d, total "
                           "area: %d" % (x1, y1, w1, h1, area))
 
                 offset_x, offset_y = cv_utils.process_image(im, x1, y1, w1, h1)
