@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import cv2
+import time
+import os
 import numpy as np
 import vision.cv_utils as cv_utils
 from vision.network_utils import Network
@@ -152,6 +154,17 @@ class Vision:
                 if timeout > 5000:
                     print("Camera search timed out!")
                     break
+
+        if self.tuning:
+            setting_names = ["Lower H", "Lower S", "Lower V", "Upper H", "Upper S", "Upper V"]
+
+            if not os.path.exists("settings"):
+                os.makedirs("settings")
+
+            with open("settings/save-{}.thr".format(round(time.time() * 1000)), "w") as thresh_file:
+                values = enumerate(self.lower.tolist() + self.upper.tolist())
+                thresh_file.writelines(["{}: {}\n".format(setting_names[num], value[0])
+                                        for num, value in values])
 
         camera.stop()
         cv2.destroyAllWindows()
