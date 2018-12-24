@@ -51,8 +51,7 @@ class Network:
         :param recipient: the recipient of the packet
         """
         timeout = int(time.time() * 1000) - self.prev_time > 500
-        if (message != self.prev_message or
-                recipient != self.prev_recipient or timeout):
+        if message != self.prev_message or recipient != self.prev_recipient or timeout:
             self.prev_message = dict(message)
             self.prev_recipient = recipient
             self.prev_time = int(time.time() * 1000)
