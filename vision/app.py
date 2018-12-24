@@ -53,11 +53,12 @@ class Vision:
                     print("[Goal] x: %d, y: %d, w: %d, h: %d, total "
                           "area: %d" % (x1, y1, w1, h1, area))
 
-                offset_x, offset_y = cv_utils.process_image(im, x1, y1, w1, h1)
+                offset_x, offset_y, distance = cv_utils.process_image(im, x1, y1, w1, h1)
 
                 self.network.send({"found": True,
-                                   "offset_x": offset_x,
-                                   "offset_y": offset_y})
+                                   "distance": distance,
+                                   "xOffset": offset_x,
+                                   "yOffset": offset_y})
 
                 if self.display:
                     # Draw image details
@@ -123,21 +124,18 @@ class Vision:
         while not self.kill_received:
             bgr = camera.read()
 
-            cube_lower = self.lower
-            cube_upper = self.upper
-
             if bgr is not None:
                 im = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
                 im = cv2.resize(im, (640, 480), 0, 0)
 
-                cube_blobs, cube_mask = cv_utils.get_blob(im, cube_lower, cube_upper)
+                cube_blobs, cube_mask = cv_utils.get_blob(im, self.lower, self.upper)
 
                 im = self.do_image(im, cube_blobs)
 
                 if cube_blobs is not None and self.display and cube_blobs is not None:
-                        cv2.imshow("Cube", cube_mask)
+                    cv2.imshow("Cube", cube_mask)
                 elif self.verbose:
-                        print("No largest blob found")
+                    print("No largest blob found")
 
                 if self.display:
                     cv2.imshow("Original", cv2.cvtColor(im, cv2.COLOR_HSV2BGR))
